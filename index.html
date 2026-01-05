@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git and SSH Multi-Account Quick Setup Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-darker: #010409;
+      --surface: #161b22;
+      --surface-hover: #1f2937;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --accent: #58a6ff;
+      --accent-bright: #79c0ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --code-bg: #0d1117;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 4rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-bright), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+      margin-top: 0.5rem;
+    }
+
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--accent-bright);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-darker);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+    }
+
+    .accounts-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .account-item {
+      background: var(--bg-darker);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .account-item input {
+      margin-bottom: 0;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #f85149;
+      border: 1px solid #f85149;
+      padding: 0.5rem 1rem;
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 81, 73, 0.1);
+    }
+
+    .btn-add {
+      margin-top: 1rem;
+    }
+
+    .generate-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.125rem;
+      margin-top: 2rem;
+    }
+
+    #output {
+      display: none;
+      margin-top: 3rem;
+    }
+
+    #output.visible {
+      display: block;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .guide-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .guide-section h2 {
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      color: var(--accent-bright);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .guide-section h3 {
+      font-size: 1.25rem;
+      margin: 1.5rem 0 1rem;
+      color: var(--text-primary);
+    }
+
+    .guide-section p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+      white-space: pre;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      padding: 0.375rem 0.75rem;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+
+    .copy-btn.copied {
+      background: var(--success);
+      color: var(--bg-dark);
+      border-color: var(--success);
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+
+    .warning {
+      background: rgba(210, 153, 34, 0.1);
+      border-left: 3px solid var(--warning);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+    }
+
+    .warning-title {
+      color: var(--warning);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .success {
+      background: rgba(63, 185, 80, 0.1);
+      border-left: 3px solid var(--success);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+    }
+
+    .success-title {
+      color: var(--success);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    ul {
+      margin-left: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight {
+      color: var(--accent-bright);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9em;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      color: var(--accent-bright);
+      border-bottom-color: var(--accent-bright);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .collapsible {
+      margin-top: 1rem;
+    }
+
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--bg-darker);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .collapsible-header:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+    }
+
+    .collapsible-icon {
+      display: inline-block;
+      transition: transform 0.2s;
+      color: var(--text-secondary);
+      font-weight: bold;
+    }
+
+    .collapsible.open .collapsible-icon {
+      transform: rotate(90deg);
+    }
+
+    .collapsible-title {
+      color: var(--warning);
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .collapsible.open .collapsible-content {
+      max-height: 2000px;
+      transition: max-height 0.5s ease-in;
+    }
+
+    .collapsible-inner {
+      padding: 1rem;
+      background: rgba(210, 153, 34, 0.05);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+    }
+
+    .help-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: help;
+      margin-left: 0.5rem;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .help-icon:hover {
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-color: var(--accent);
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 0.75rem;
+      min-width: 250px;
+      max-width: 350px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    .help-icon:hover .tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-12px);
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--accent);
+    }
+
+    .tooltip-title {
+      font-weight: 700;
+      color: var(--accent-bright);
+      margin-bottom: 0.5rem;
+    }
+
+    .tooltip-example {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .tooltip code {
+      background: var(--bg-darker);
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-bright);
+      font-size: 0.75rem;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .account-item {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 2rem 1rem;
+      }
+
+      .tooltip {
+        min-width: 200px;
+        max-width: 90vw;
+        left: auto;
+        right: 0;
+        transform: translateX(0) translateY(-8px);
+      }
+
+      .help-icon:hover .tooltip {
+        transform: translateX(0) translateY(-12px);
+      }
+
+      .tooltip::after {
+        left: auto;
+        right: 10px;
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Git and SSH Multi-Account Quick Setup Guide</h1>
+    <p class="subtitle">A personalized guide for managing multiple Git accounts with automatic switching</p>
+  </header>
+
+  <div class="form-section">
+    <h2>System Information</h2>
+
+    <div class="form-group">
+      <label for="username">
+        System Username
+        <span class="help-icon">?
+                        <span class="tooltip">
+                            <div class="tooltip-title">System Username</div>
+                            This is your computer's username, used to build file paths for the setup.
+                            <div class="tooltip-example">
+                                <strong>To find your username:</strong><br>
+                                Windows CMD: <code>echo %USERNAME%</code><br>
+                                Windows PowerShell: <code>$Env:UserName</code><br>
+                                macOS/Linux: <code>whoami</code>
+                            </div>
+                            <div class="tooltip-example">Example: johndoe</div>
+                        </span>
+                    </span>
+      </label>
+      <input type="text" id="username" placeholder="e.g., JohnDoe" required>
+    </div>
+
+    <div class="form-group">
+      <label for="os">
+        Operating System
+        <span class="help-icon">?
+                        <span class="tooltip">
+                            <div class="tooltip-title">Operating System</div>
+                            Select your OS to get commands and file paths specific to your system.
+                        </span>
+                    </span>
+      </label>
+      <select id="os" required>
+        <option value="">Select your OS</option>
+        <option value="windows">Windows</option>
+        <option value="macos">macOS</option>
+        <option value="linux">Linux</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2>Git Accounts</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      Add each GitHub/GitLab account you want to manage. The pattern will be used to match remote URLs.
+    </p>
+
+    <div class="accounts-container" id="accountsContainer">
+      <div class="account-item" data-index="0">
+        <div class="form-group">
+          <label>
+            Account Pattern
+            <span class="help-icon">?
+                                <span class="tooltip">
+                                    <div class="tooltip-title">Account Pattern</div>
+                                    A unique identifier used in your remote URLs to distinguish this account. This becomes the SSH host alias.
+                                    <div class="tooltip-example">Examples: github-personal, github-work, gitlab-company</div>
+                                </span>
+                            </span>
+          </label>
+          <input type="text" class="account-pattern" placeholder="e.g., github-personal" required>
+        </div>
+        <div class="form-group">
+          <label>
+            Git Name
+            <span class="help-icon">?
+                                <span class="tooltip">
+                                    <div class="tooltip-title">Git Name</div>
+                                    Your full name as it will appear in commit messages for this account.
+                                    <div class="tooltip-example">Example: John Doe, Jane Smith</div>
+                                </span>
+                            </span>
+          </label>
+          <input type="text" class="account-name" placeholder="e.g., John Doe" required>
+        </div>
+        <div class="form-group">
+          <label>
+            Git Email
+            <span class="help-icon">?
+                                <span class="tooltip">
+                                    <div class="tooltip-title">Git Email</div>
+                                    The email address associated with commits for this account. Should match your GitHub/GitLab account email.
+                                    <div class="tooltip-example">Example: john@example.com</div>
+                                </span>
+                            </span>
+          </label>
+          <input type="email" class="account-email" placeholder="e.g., john@example.com" required>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary btn-add" onclick="addAccount()">+ Add Another Account</button>
+  </div>
+
+  <button class="btn btn-primary generate-btn" onclick="generateGuide()">Generate My Setup Guide</button>
+
+  <div id="output"></div>
+</div>
+
+<script>
+  let accountIndex = 1;
+
+  function addAccount() {
+    const container = document.getElementById('accountsContainer');
+    const newAccount = document.createElement('div');
+    newAccount.className = 'account-item';
+    newAccount.setAttribute('data-index', accountIndex);
+    newAccount.innerHTML = `
+                <div class="form-group">
+                    <label>
+                        Account Pattern
+                        <span class="help-icon">?
+                            <span class="tooltip">
+                                <div class="tooltip-title">Account Pattern</div>
+                                A unique identifier used in your remote URLs to distinguish this account. This becomes the SSH host alias.
+                                <div class="tooltip-example">Examples: github-personal, github-work, gitlab-company</div>
+                            </span>
+                        </span>
+                    </label>
+                    <input type="text" class="account-pattern" placeholder="e.g., github-work" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Git Name
+                        <span class="help-icon">?
+                            <span class="tooltip">
+                                <div class="tooltip-title">Git Name</div>
+                                Your full name as it will appear in commit messages for this account.
+                                <div class="tooltip-example">Example: John Doe, Jane Smith</div>
+                            </span>
+                        </span>
+                    </label>
+                    <input type="text" class="account-name" placeholder="e.g., Work Name" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Git Email
+                        <span class="help-icon">?
+                            <span class="tooltip">
+                                <div class="tooltip-title">Git Email</div>
+                                The email address associated with commits for this account. Should match your GitHub/GitLab account email.
+                                <div class="tooltip-example">Example: john@example.com</div>
+                            </span>
+                        </span>
+                    </label>
+                    <input type="email" class="account-email" placeholder="e.g., work@company.com" required>
+                </div>
+                <button class="btn btn-danger" onclick="removeAccount(${accountIndex})">Remove</button>
+            `;
+    container.appendChild(newAccount);
+    accountIndex++;
+  }
+
+  function removeAccount(index) {
+    const account = document.querySelector(`[data-index="${index}"]`);
+    if (account) {
+      account.remove();
+    }
+  }
+
+  function getAccounts() {
+    const accounts = [];
+    document.querySelectorAll('.account-item').forEach(item => {
+      const pattern = item.querySelector('.account-pattern').value;
+      const name = item.querySelector('.account-name').value;
+      const email = item.querySelector('.account-email').value;
+      if (pattern && name && email) {
+        accounts.push({ pattern, name, email });
+      }
+    });
+    return accounts;
+  }
+
+  function getHomePath(os, username) {
+    if (os === 'windows') {
+      return `C:/Users/${username}`;
+    }
+    return `~`;
+  }
+
+  function getShellExample(os) {
+    if (os === 'windows') {
+      return 'PowerShell or Git Bash';
+    }
+    return 'Terminal';
+  }
+
+  function copyCode(button, code) {
+    navigator.clipboard.writeText(code).then(() => {
+      const originalText = button.textContent;
+      button.textContent = '✓ Copied!';
+      button.classList.add('copied');
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function switchTab(tabId, tabGroupId) {
+    // Hide all tab contents in this group
+    const group = document.getElementById(tabGroupId);
+    group.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    group.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+
+    // Show selected tab content
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCollapsible(id) {
+    const collapsible = document.getElementById(id);
+    collapsible.classList.toggle('open');
+  }
+
+  function generateHookScript(accounts) {
+    let script = `#!/bin/sh
+
+# Get the remote URL
+remote_url=$(git config --get remote.origin.url)
+
+# Match against patterns and set user config accordingly
+`;
+
+    accounts.forEach((account, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      script += `${condition} echo "$remote_url" | grep -q "${account.pattern}"; then
+    git config user.name "${account.name}"
+    git config user.email "${account.email}"
+`;
+    });
+
+    script += `fi
+
+exit 0`;
+
+    return script;
+  }
+
+  function generatePreCommitHook(accounts) {
+    let script = `#!/bin/sh
+
+# Get the remote URL
+remote_url=$(git config --get remote.origin.url)
+
+# Match against patterns and set user config accordingly
+`;
+
+    accounts.forEach((account, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      script += `${condition} echo "$remote_url" | grep -q "${account.pattern}"; then
+    git config user.name "${account.name}"
+    git config user.email "${account.email}"
+`;
+    });
+
+    script += `fi
+
+exit 0`;
+
+    return script;
+  }
+
+  function generatePostCheckoutHook(accounts) {
+    let script = `#!/bin/sh
+
+# Get the remote URL
+remote_url=$(git config --get remote.origin.url)
+
+# Match against patterns and set user config accordingly
+`;
+
+    accounts.forEach((account, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      script += `${condition} echo "$remote_url" | grep -q "${account.pattern}"; then
+    git config user.name "${account.name}"
+    git config user.email "${account.email}"
+`;
+    });
+
+    script += `fi
+
+exit 0`;
+
+    return script;
+  }
+
+  function generateSSHConfig(accounts, os) {
+    let config = `# SSH Configuration for Multiple Git Accounts
+# Generated by Git Multi-Account Setup Generator
+
+`;
+
+    accounts.forEach(account => {
+      const keyFile = os === 'windows'
+              ? `C:/Users/USERNAME/.ssh/id_ed25519_${account.pattern.replace('github-', '').replace('gitlab-', '')}`
+              : `~/.ssh/id_ed25519_${account.pattern.replace('github-', '').replace('gitlab-', '')}`;
+
+      config += `# ${account.name} (${account.email})
+Host ${account.pattern}
+    HostName github.com
+    User git
+    IdentityFile ${keyFile}
+    IdentitiesOnly yes
+
+`;
+    });
+
+    return config;
+  }
+
+  function generateGuide() {
+    const username = document.getElementById('username').value;
+    const os = document.getElementById('os').value;
+    const accounts = getAccounts();
+
+    if (!username || !os || accounts.length === 0) {
+      alert('Please fill in all required fields and add at least one account.');
+      return;
+    }
+
+    const homePath = getHomePath(os, username);
+    const hooksPath = os === 'windows' ? `${homePath}/.git-hooks` : `~/.git-hooks`;
+    const sshPath = os === 'windows' ? `${homePath}/.ssh` : `~/.ssh`;
+    const shellExample = getShellExample(os);
+
+    const hookScript = generateHookScript(accounts);
+    const preCommitHook = generatePreCommitHook(accounts);
+    const postCheckoutHook = generatePostCheckoutHook(accounts);
+    const sshConfig = generateSSHConfig(accounts, os);
+
+    const guide = `
+                <div class="guide-section">
+                    <h2><span class="step-number">1</span> Create Global Git Hooks Directory</h2>
+                    <p>First, create a directory to store your global Git hooks:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">${shellExample}</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`mkdir ${hooksPath}\`)'>Copy</button>
+                        </div>
+                        <pre>mkdir ${hooksPath}</pre>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">2</span> Create the Pre-Push Hook</h2>
+                    <p>Create and edit a file named <span class="highlight">pre-push</span> (no extension) at <span class="highlight">${hooksPath}/pre-push</span></p>
+
+                    ${os === 'windows' ? `
+                    <p>First, create an empty file, then open it in your text editor:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Create/open file</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`if (!(Test-Path "${hooksPath}/pre-push")) { New-Item -ItemType File -Path "${hooksPath}/pre-push" -Force }\nnotepad "${hooksPath}/pre-push"\`)'>Copy</button>
+                        </div>
+                        <pre>if (!(Test-Path "${hooksPath}/pre-push")) { New-Item -ItemType File -Path "${hooksPath}/pre-push" -Force }
+notepad "${hooksPath}/pre-push"</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Or use VS Code if installed: <code>code "${hooksPath}/pre-push"</code></p>
+                    ` : `
+                    <p>Use nano or your preferred text editor to create and edit the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Edit with nano</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`nano ${hooksPath}/pre-push\`)'>Copy</button>
+                        </div>
+                        <pre>nano ${hooksPath}/pre-push</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">After pasting the content, press <span class="highlight">Ctrl+X</span>, then <span class="highlight">Y</span>, then <span class="highlight">Enter</span> to save.</p>
+                    `}
+
+                    <p style="margin-top: 1.5rem;">Copy and paste this content into the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">File content</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`${hookScript.replace(/`/g, '\\`')}\`)'>Copy</button>
+                        </div>
+                        <pre>${hookScript.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </div>
+
+                    <div class="warning">
+                        <div class="warning-title">Important:</div>
+                        <p>This script will automatically set your Git name and email based on the remote URL pattern before each push.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">3</span> Create the Pre-Commit Hook</h2>
+                    <p>For even better protection, also create a <span class="highlight">pre-commit</span> hook that runs before each commit:</p>
+
+                    ${os === 'windows' ? `
+                    <p>First, create an empty file, then open it in your text editor:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Create/open file</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`if (!(Test-Path "${hooksPath}/pre-commit")) { New-Item -ItemType File -Path "${hooksPath}/pre-commit" -Force }\nnotepad "${hooksPath}/pre-commit"\`)'>Copy</button>
+                        </div>
+                        <pre>if (!(Test-Path "${hooksPath}/pre-commit")) { New-Item -ItemType File -Path "${hooksPath}/pre-commit" -Force }
+notepad "${hooksPath}/pre-commit"</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Or use VS Code if installed: <code>code "${hooksPath}/pre-commit"</code></p>
+                    ` : `
+                    <p>Use nano or your preferred text editor to create and edit the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Edit with nano</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`nano ${hooksPath}/pre-commit\`)'>Copy</button>
+                        </div>
+                        <pre>nano ${hooksPath}/pre-commit</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">After pasting the content, press <span class="highlight">Ctrl+X</span>, then <span class="highlight">Y</span>, then <span class="highlight">Enter</span> to save.</p>
+                    `}
+
+                    <p style="margin-top: 1.5rem;">Copy and paste this content into the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">File content</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`${preCommitHook.replace(/`/g, '\\`')}\`)'>Copy</button>
+                        </div>
+                        <pre>${preCommitHook.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </div>
+
+                    <div class="success">
+                        <div class="success-title">Why both hooks?</div>
+                        <p><strong>pre-commit</strong> sets your identity before creating the commit (prevents wrong author)</p>
+                        <p><strong>pre-push</strong> double-checks before pushing (last line of defense)</p>
+                        <p style="margin-top: 0.5rem;">Using both ensures you never commit or push with the wrong identity!</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">4</span> Create the Post-Checkout Hook</h2>
+                    <p>This hook runs after cloning or checking out branches, automatically setting your identity:</p>
+
+                    ${os === 'windows' ? `
+                    <p>First, create an empty file, then open it in your text editor:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Create/open file</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`if (!(Test-Path "${hooksPath}/post-checkout")) { New-Item -ItemType File -Path "${hooksPath}/post-checkout" -Force }\nnotepad "${hooksPath}/post-checkout"\`)'>Copy</button>
+                        </div>
+                        <pre>if (!(Test-Path "${hooksPath}/post-checkout")) { New-Item -ItemType File -Path "${hooksPath}/post-checkout" -Force }
+notepad "${hooksPath}/post-checkout"</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Or use VS Code if installed: <code>code "${hooksPath}/post-checkout"</code></p>
+                    ` : `
+                    <p>Use nano or your preferred text editor to create and edit the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Edit with nano</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`nano ${hooksPath}/post-checkout\`)'>Copy</button>
+                        </div>
+                        <pre>nano ${hooksPath}/post-checkout</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">After pasting the content, press <span class="highlight">Ctrl+X</span>, then <span class="highlight">Y</span>, then <span class="highlight">Enter</span> to save.</p>
+                    `}
+
+                    <p style="margin-top: 1.5rem;">Copy and paste this content into the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">File content</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`${postCheckoutHook.replace(/`/g, '\\`')}\`)'>Copy</button>
+                        </div>
+                        <pre>${postCheckoutHook.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </div>
+
+                    <div class="success">
+                        <div class="success-title">✓ Automatic setup on clone!</div>
+                        <p>Now when you clone a repo, your Git identity is automatically configured. No manual setup needed!</p>
+                    </div>
+                </div>
+
+                ${os !== 'windows' ? `
+                <div class="guide-section">
+                    <h2><span class="step-number">5</span> Make the Hooks Executable</h2>
+                    <p>Run the following commands to make all hooks executable:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">${shellExample}</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`chmod +x ${hooksPath}/pre-push\nchmod +x ${hooksPath}/pre-commit\nchmod +x ${hooksPath}/post-checkout\`)'>Copy</button>
+                        </div>
+                        <pre>chmod +x ${hooksPath}/pre-push
+chmod +x ${hooksPath}/pre-commit
+chmod +x ${hooksPath}/post-checkout</pre>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '6' : '5'}</span> Configure Git to Use Global Hooks</h2>
+                    <p>Tell Git to use your global hooks directory:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">${shellExample}</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git config --global core.hooksPath ${hooksPath}\`)'>Copy</button>
+                        </div>
+                        <pre>git config --global core.hooksPath ${hooksPath}</pre>
+                    </div>
+
+                    <div class="success">
+                        <div class="success-title">✓ Part 1 Complete!</div>
+                        <p>Your Git hooks are now configured. Next, we'll set up SSH keys for each account.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '7' : '6'}</span> (Optional) Add Git Alias for Manual Setup</h2>
+                    <p>Add a convenient Git command to manually set your identity in any repo:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Add Git alias</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git config --global alias.set-identity "!${hooksPath}/post-checkout"\`)'>Copy</button>
+                        </div>
+                        <pre>git config --global alias.set-identity "!${hooksPath}/post-checkout"</pre>
+                    </div>
+
+                    <p style="margin-top: 1rem;">Now you can run <span class="highlight">git set-identity</span> in any repo to set up your user config based on the remote URL.</p>
+
+                    <div class="success">
+                        <div class="success-title">Usage</div>
+                        <p>This is useful for:</p>
+                        <ul>
+                            <li>Existing repos before you set up hooks</li>
+                            <li>Repos where the hook didn't run automatically</li>
+                            <li>Quick manual identity switching</li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;">Just run: <code>git set-identity</code></p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '8' : '7'}</span> Generate SSH Keys</h2>
+                    <p>Generate a unique SSH key for each of your accounts:</p>
+
+                    ${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      const keyPath = os === 'windows' ? `${homePath}/.ssh/id_ed25519_${keyName}` : `~/.ssh/id_ed25519_${keyName}`;
+      const sshDir = os === 'windows' ? `${homePath}/.ssh` : `~/.ssh`;
+      return `
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-label">${account.pattern} key</span>
+                                <button class="copy-btn" onclick='copyCode(this, \`ssh-keygen -t ed25519 -C "${account.email}" -f ${keyPath}\`)'>Copy</button>
+                            </div>
+                            <pre>ssh-keygen -t ed25519 -C "${account.email}" -f ${keyPath}</pre>
+                        </div>
+                        `;
+    }).join('')}
+
+                    <div class="warning">
+                        <div class="warning-title">Note:</div>
+                        <p>When prompted, you can press Enter to skip setting a passphrase, or add one for extra security.</p>
+                    </div>
+
+                    ${os === 'windows' ? `
+                    <div class="collapsible" id="ssh-keygen-help">
+                        <div class="collapsible-header" onclick="toggleCollapsible('ssh-keygen-help')">
+                            <span class="collapsible-icon">▶</span>
+                            <span class="collapsible-title">Help: Getting "No such file or directory" error?</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>If ssh-keygen fails because the target files don't exist, create empty key files first:</p>
+
+                                <div id="ssh-fix-tabs">
+                                    <div class="tabs">
+                                        <button class="tab active" onclick="switchTab('powershell-tab', 'ssh-fix-tabs')">PowerShell</button>
+                                        <button class="tab" onclick="switchTab('cmd-tab', 'ssh-fix-tabs')">CMD</button>
+                                    </div>
+
+                                    <div id="powershell-tab" class="tab-content active">
+                                        <div class="code-block">
+                                            <div class="code-header">
+                                                <span class="code-label">PowerShell</span>
+                                                <button class="copy-btn" onclick='copyCode(this, \`${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      return `New-Item -ItemType File -Path "${homePath}/.ssh/id_ed25519_${keyName}" -Force\nNew-Item -ItemType File -Path "${homePath}/.ssh/id_ed25519_${keyName}.pub" -Force`;
+    }).join('\n')}\`)'>Copy</button>
+                                            </div>
+                                            <pre>${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      return `New-Item -ItemType File -Path "${homePath}/.ssh/id_ed25519_${keyName}" -Force\nNew-Item -ItemType File -Path "${homePath}/.ssh/id_ed25519_${keyName}.pub" -Force`;
+    }).join('\n')}</pre>
+                                        </div>
+                                    </div>
+
+                                    <div id="cmd-tab" class="tab-content">
+                                        <div class="code-block">
+                                            <div class="code-header">
+                                                <span class="code-label">CMD</span>
+                                                <button class="copy-btn" onclick='copyCode(this, \`${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      return `type nul > "${homePath}/.ssh/id_ed25519_${keyName}"\ntype nul > "${homePath}/.ssh/id_ed25519_${keyName}.pub"`;
+    }).join('\n')}\`)'>Copy</button>
+                                            </div>
+                                            <pre>${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      return `type nul > "${homePath}/.ssh/id_ed25519_${keyName}"\ntype nul > "${homePath}/.ssh/id_ed25519_${keyName}.pub"`;
+    }).join('\n')}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p style="margin-top: 1rem;">After creating the files, run the ssh-keygen commands again.</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="collapsible" id="ssh-keygen-help">
+                        <div class="collapsible-header" onclick="toggleCollapsible('ssh-keygen-help')">
+                            <span class="collapsible-icon">▶</span>
+                            <span class="collapsible-title">Help: Getting "No such file or directory" error?</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>If ssh-keygen fails because the target files don't exist, create empty key files first:</p>
+                                <div class="code-block" style="margin-top: 0.5rem;">
+                                    <div class="code-header">
+                                        <span class="code-label">Create empty key files</span>
+                                        <button class="copy-btn" onclick='copyCode(this, \`${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      return `touch ~/.ssh/id_ed25519_${keyName}\ntouch ~/.ssh/id_ed25519_${keyName}.pub`;
+    }).join('\n')}\`)'>Copy</button>
+                                    </div>
+                                    <pre>${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      return `touch ~/.ssh/id_ed25519_${keyName}\ntouch ~/.ssh/id_ed25519_${keyName}.pub`;
+    }).join('\n')}</pre>
+                                </div>
+                                <p style="margin-top: 1rem;">After creating the files, run the ssh-keygen commands again.</p>
+                            </div>
+                        </div>
+                    </div>
+                    `}
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '9' : '8'}</span> Configure SSH</h2>
+                    <p>Create or edit your SSH config file at <span class="highlight">${sshPath}/config</span></p>
+
+                    ${os === 'windows' ? `
+                    <p>First, create the file if it doesn't exist, then open it in your text editor:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Create/open file</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`if (!(Test-Path "${sshPath}/config")) { New-Item -ItemType File -Path "${sshPath}/config" -Force }\nnotepad "${sshPath}/config"\`)'>Copy</button>
+                        </div>
+                        <pre>if (!(Test-Path "${sshPath}/config")) { New-Item -ItemType File -Path "${sshPath}/config" -Force }
+notepad "${sshPath}/config"</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Or use VS Code if installed: <code>code "${sshPath}/config"</code></p>
+                    ` : `
+                    <p>Use nano or your preferred text editor:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Edit with nano</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`nano ${sshPath}/config\`)'>Copy</button>
+                        </div>
+                        <pre>nano ${sshPath}/config</pre>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">After pasting the content, press <span class="highlight">Ctrl+X</span>, then <span class="highlight">Y</span>, then <span class="highlight">Enter</span> to save.</p>
+                    `}
+
+                    <p style="margin-top: 1.5rem;">Copy and paste this content into the file:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">File content</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`${sshConfig.replace(/`/g, '\\`')}\`)'>Copy</button>
+                        </div>
+                        <pre>${sshConfig.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/USERNAME/g, username)}</pre>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '10' : '9'}</span> Add Public Keys to GitHub</h2>
+                    <p>For each account, copy the public key and add it to GitHub:</p>
+
+                    ${accounts.map(account => {
+      const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
+      const keyPath = os === 'windows' ? `${homePath}/.ssh/id_ed25519_${keyName}.pub` : `~/.ssh/id_ed25519_${keyName}.pub`;
+      return `
+                        <h3>${account.name} (${account.pattern})</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-label">Display public key</span>
+                                <button class="copy-btn" onclick='copyCode(this, \`cat ${keyPath}\`)'>Copy</button>
+                            </div>
+                            <pre>cat ${keyPath}</pre>
+                        </div>
+                        <p>Then:</p>
+                        <ul>
+                            <li>Go to GitHub → Settings → SSH and GPG keys → New SSH key</li>
+                            <li>Paste the public key content</li>
+                            <li>Save</li>
+                        </ul>
+                        `;
+    }).join('')}
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '11' : '10'}</span> Test Your Setup</h2>
+                    <p>Test each SSH connection:</p>
+
+                    ${accounts.map(account => `
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-label">Test ${account.pattern}</span>
+                                <button class="copy-btn" onclick='copyCode(this, \`ssh -T git@${account.pattern}\`)'>Copy</button>
+                            </div>
+                            <pre>ssh -T git@${account.pattern}</pre>
+                        </div>
+                    `).join('')}
+
+                    <div class="success">
+                        <div class="success-title">Expected Output:</div>
+                        <p>Hi [username]! You've successfully authenticated, but GitHub does not provide shell access.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2><span class="step-number">${os !== 'windows' ? '12' : '11'}</span> Using Your Setup</h2>
+                    <p>When cloning or working with repositories, use the appropriate host alias:</p>
+
+                    ${accounts.map(account => `
+                        <h3>${account.pattern}</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-label">Clone example</span>
+                                <button class="copy-btn" onclick='copyCode(this, \`git clone git@${account.pattern}:username/repo.git\`)'>Copy</button>
+                            </div>
+                            <pre>git clone git@${account.pattern}:username/repo.git</pre>
+                        </div>
+                    `).join('')}
+
+                    <h3>For Existing Repositories</h3>
+                    <p>Update the remote URL to use your host alias:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Update remote URL</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git remote set-url origin git@PATTERN:username/repo.git\`)'>Copy</button>
+                        </div>
+                        <pre>git remote set-url origin git@PATTERN:username/repo.git</pre>
+                    </div>
+                    <p style="margin-top: 1rem;">Replace <span class="highlight">PATTERN</span> with your account pattern (e.g., ${accounts[0].pattern})</p>
+
+                    <div class="success">
+                        <div class="success-title">🎉 Setup Complete!</div>
+                        <p>You're all set! Your Git hooks will automatically manage your identity:</p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>post-checkout</strong> - Sets identity when cloning or switching branches</li>
+                            <li><strong>pre-commit</strong> - Ensures correct identity before commits</li>
+                            <li><strong>pre-push</strong> - Final check before pushing</li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;">Triple protection means you'll never use the wrong account!</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2>IDE Setup (WebStorm, IntelliJ, etc.)</h2>
+                    <p>To ensure your IDE never asks for name/email:</p>
+
+                    <div class="warning">
+                        <div class="warning-title">WebStorm Specific Settings</div>
+                        <p><strong>Step 1: Disable WebStorm's Git identity prompts</strong></p>
+                        <p>In WebStorm, go to <strong>Settings → Version Control → Git</strong> and ensure:</p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>☐ "Set user name" is <strong>unchecked</strong></li>
+                            <li>☐ "Set user email" is <strong>unchecked</strong></li>
+                        </ul>
+
+                        <p style="margin-top: 1rem;"><strong>Step 2: Set identity for existing repos</strong></p>
+                        <p>For repos you opened before setting up hooks, run this once in each repo:</p>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+                            <div class="code-header">
+                                <span class="code-label">In WebStorm terminal or any terminal</span>
+                                <button class="copy-btn" onclick='copyCode(this, \`cd /path/to/repo\ngit set-identity\`)'>Copy</button>
+                            </div>
+                            <pre>cd /path/to/repo
+git set-identity</pre>
+                        </div>
+                        <p style="margin-top: 0.5rem;">That's it! WebStorm will now use the correct identity and never ask again.</p>
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h2>Troubleshooting</h2>
+
+                    <h3>Hook not running?</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Check hooks path</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git config --global core.hooksPath\`)'>Copy</button>
+                        </div>
+                        <pre>git config --global core.hooksPath</pre>
+                    </div>
+
+                    <h3>SSH key not working?</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">List added keys</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`ssh-add -l\`)'>Copy</button>
+                        </div>
+                        <pre>ssh-add -l</pre>
+                    </div>
+
+                    <h3>Wrong user config?</h3>
+                    ${os === 'windows' ? `
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Check current config (PowerShell)</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git config --list --show-origin | Select-String user\`)'>Copy</button>
+                        </div>
+                        <pre>git config --list --show-origin | Select-String user</pre>
+                    </div>
+                    ` : `
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Check current config</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git config --list --show-origin | grep user\`)'>Copy</button>
+                        </div>
+                        <pre>git config --list --show-origin | grep user</pre>
+                    </div>
+                    `}
+                </div>
+            `;
+
+    document.getElementById('output').innerHTML = guide;
+    document.getElementById('output').classList.add('visible');
+    document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
