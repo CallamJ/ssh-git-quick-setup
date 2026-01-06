@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress HtmlUnknownTag, CssUnusedSymbol -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -641,7 +642,9 @@
                                 </span>
                             </span>
                     </label>
-                    <input type="text" class="account-pattern" placeholder="e.g., github-personal" required>
+                    <label>
+                        <input type="text" class="account-pattern" placeholder="e.g., github-personal" required>
+                    </label>
                 </div>
                 <div class="form-group">
                     <label>
@@ -654,7 +657,9 @@
                                 </span>
                             </span>
                     </label>
-                    <input type="text" class="account-name" placeholder="e.g., John Doe" required>
+                    <label>
+                        <input type="text" class="account-name" placeholder="e.g., John Doe" required>
+                    </label>
                 </div>
                 <div class="form-group">
                     <label>
@@ -667,7 +672,9 @@
                                 </span>
                             </span>
                     </label>
-                    <input type="email" class="account-email" placeholder="e.g., john@example.com" required>
+                    <label>
+                        <input type="email" class="account-email" placeholder="e.g., john@example.com" required>
+                    </label>
                 </div>
             </div>
         </div>
@@ -687,6 +694,7 @@
         const container = document.getElementById('accountsContainer');
         const newAccount = document.createElement('div');
         newAccount.className = 'account-item';
+        // noinspection JSCheckFunctionSignatures
         newAccount.setAttribute('data-index', accountIndex);
         newAccount.innerHTML = `
                 <div class="form-group">
@@ -792,6 +800,7 @@
 
         // Show selected tab content
         document.getElementById(tabId).classList.add('active');
+        // noinspection JSDeprecatedSymbols
         event.target.classList.add('active');
     }
 
@@ -915,6 +924,7 @@ Host ${account.pattern}
         const postCheckoutHook = generatePostCheckoutHook(accounts);
         const sshConfig = generateSSHConfig(accounts, os);
 
+        // noinspection UnnecessaryLocalVariableJS
         const guide = `
                 <div class="guide-section">
                     <h2><span class="step-number">1</span> Create Global Git Hooks Directory</h2>
@@ -1203,7 +1213,6 @@ chmod +x ${hooksPath}/post-checkout</pre>
                     ${accounts.map(account => {
             const keyName = account.pattern.replace('github-', '').replace('gitlab-', '');
             const keyPath = os === 'windows' ? `${homePath}/.ssh/id_ed25519_${keyName}` : `~/.ssh/id_ed25519_${keyName}`;
-            const sshDir = os === 'windows' ? `${homePath}/.ssh` : `~/.ssh`;
             return `
                         <div class="code-block">
                             <div class="code-header">
