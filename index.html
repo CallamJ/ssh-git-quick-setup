@@ -1098,7 +1098,7 @@ chmod +x ${hooksPath}/post-checkout</pre>
                 </div>
 
                 <div class="guide-section">
-                    <h2><span class="step-number">${os !== 'windows' ? '7' : '6'}</span> (Optional) Add Git Alias for Manual Setup</h2>
+                    <h2><span class="step-number">${os !== 'windows' ? '7' : '6'}</span> Add Git Alias for Manual Setup</h2>
                     <p>Add a convenient Git command to manually set your identity in any repo:</p>
 
                     <div class="code-block">
@@ -1109,7 +1109,7 @@ chmod +x ${hooksPath}/post-checkout</pre>
                         <pre>git config --global alias.set-identity "!${hooksPath}/post-checkout"</pre>
                     </div>
 
-                    <p style="margin-top: 1rem;">Now you can run <span class="highlight">git set-identity</span> in any repo to set up your user config based on the remote URL.</p>
+                    <p style="margin-top: 1rem;">Now you can run <span class="highlight">git set-identity</span> in any repo to set up your user config based on the remote URL. This is highly recommended for use with IDEs that do not trigger pre-commit scripts before checking user identity.</p>
 
                     <div class="success">
                         <div class="success-title">Usage</div>
@@ -1346,33 +1346,6 @@ notepad "${sshPath}/config"</pre>
                             <li><strong>pre-push</strong> - Final check before pushing</li>
                         </ul>
                         <p style="margin-top: 0.5rem;">Triple protection means you'll never use the wrong account!</p>
-                    </div>
-                </div>
-
-                <div class="guide-section">
-                    <h2>IDE Setup (WebStorm, IntelliJ, etc.)</h2>
-                    <p>To ensure your IDE never asks for name/email:</p>
-
-                    <div class="warning">
-                        <div class="warning-title">WebStorm Specific Settings</div>
-                        <p><strong>Step 1: Disable WebStorm's Git identity prompts</strong></p>
-                        <p>In WebStorm, go to <strong>Settings → Version Control → Git</strong> and ensure:</p>
-                        <ul style="margin-top: 0.5rem;">
-                            <li>☐ "Set user name" is <strong>unchecked</strong></li>
-                            <li>☐ "Set user email" is <strong>unchecked</strong></li>
-                        </ul>
-
-                        <p style="margin-top: 1rem;"><strong>Step 2: Set identity for existing repos</strong></p>
-                        <p>For repos you opened before setting up hooks, run this once in each repo:</p>
-                        <div class="code-block" style="margin-top: 0.5rem;">
-                            <div class="code-header">
-                                <span class="code-label">In WebStorm terminal or any terminal</span>
-                                <button class="copy-btn" onclick='copyCode(this, \`cd /path/to/repo\ngit set-identity\`)'>Copy</button>
-                            </div>
-                            <pre>cd /path/to/repo
-git set-identity</pre>
-                        </div>
-                        <p style="margin-top: 0.5rem;">That's it! WebStorm will now use the correct identity and never ask again.</p>
                     </div>
                 </div>
 
