@@ -975,7 +975,7 @@
 
         if (os === 'windows') {
             const accountArgs = accounts.map(acc => `'${acc.pattern}:${acc.name}:${acc.email}'`).join(', ');
-            commandForCopy = `$script = irm https://raw.githubusercontent.com/CallamJ/ssh-git-quick-setup/feature/install-script/install.ps1; Invoke-Expression "& { $script } -Accounts ${accountArgs}"`;
+            commandForCopy = `$script = irm https://callamj.github.io/ssh-git-quick-setup/install.ps1; Invoke-Expression "& { $script } -Accounts ${accountArgs}"`;
             command = commandForCopy.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const escapedCommand = commandForCopy.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             instructions = `
@@ -999,7 +999,7 @@
             `;
         } else {
             const accountArgs = accounts.map(acc => `"${acc.pattern}:${acc.name}:${acc.email}"`).join(' ');
-            commandForCopy = `curl -fsSL https://raw.githubusercontent.com/CallamJ/ssh-git-quick-setup/feature/install-script/install.sh | bash -s -- ${accountArgs}`;
+            commandForCopy = `curl -fsSL https://callamj.github.io/ssh-git-quick-setup/install.sh | bash -s -- ${accountArgs}`;
             command = commandForCopy.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const escapedCommand = commandForCopy.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             instructions = `
