@@ -255,7 +255,8 @@ Host $pattern
 "@
     }
 
-    Add-Content -Path $sshConfig -Value $config -Encoding UTF8
+    # Use Set-Content to overwrite instead of Add-Content to append
+    Set-Content -Path $sshConfig -Value $config -Encoding UTF8
     Print-Success "SSH configuration updated"
 }
 
