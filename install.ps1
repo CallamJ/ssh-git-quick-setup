@@ -255,8 +255,8 @@ Host $pattern
 "@
     }
 
-    # Use Set-Content to overwrite instead of Add-Content to append
-    Set-Content -Path $sshConfig -Value $config -Encoding UTF8
+    # Write with UTF-8 encoding without BOM
+    [System.IO.File]::WriteAllText($sshConfig, $config, (New-Object System.Text.UTF8Encoding $false))
     Print-Success "SSH configuration updated"
 }
 
