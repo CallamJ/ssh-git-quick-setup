@@ -66,6 +66,69 @@
             margin-top: 0.5rem;
         }
 
+        .setup-method-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .method-option {
+            flex: 1;
+            padding: 1.5rem;
+            background: var(--bg-darker);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .method-option:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .method-option.active {
+            border-color: var(--accent-bright);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .method-option h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .method-option p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .method-option .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--success);
+            color: var(--bg-dark);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .setup-content {
+            display: none;
+        }
+
+        .setup-content.active {
+            display: block;
+        }
+
         .form-section {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -189,12 +252,12 @@
             width: 100%;
             padding: 1rem;
             font-size: 1.125rem;
-            margin-top: 2rem;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
         }
 
         #output {
             display: none;
-            margin-top: 3rem;
         }
 
         #output.visible {
@@ -248,7 +311,6 @@
             padding: 1.5rem;
             margin: 1rem 0;
             position: relative;
-            overflow-x: auto;
         }
 
         .code-block pre {
@@ -257,6 +319,9 @@
             line-height: 1.6;
             color: var(--text-primary);
             white-space: pre;
+            overflow-x: auto;
+            margin: 0;
+            padding-right: 1rem;
         }
 
         .code-header {
@@ -266,6 +331,10 @@
             margin-bottom: 1rem;
             padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border);
+            position: sticky;
+            left: 0;
+            background: var(--code-bg);
+            z-index: 10;
         }
 
         .code-label {
@@ -565,6 +634,10 @@
                 right: 10px;
                 transform: translateX(0);
             }
+
+            .setup-method-selector {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -581,13 +654,113 @@
         </a>
     </header>
 
-    <div class="form-section">
-        <h2>System Information</h2>
+    <div class="setup-method-selector">
+        <div class="method-option active" onclick="switchMethod('automated')">
+            <h3>Automated Setup</h3>
+            <p>Run a single command to configure everything automatically</p>
+            <div class="badge">Recommended</div>
+        </div>
+        <div class="method-option" onclick="switchMethod('manual')">
+            <h3>Manual Setup</h3>
+            <p>Follow step-by-step instructions for full control</p>
+        </div>
+    </div>
 
-        <div class="form-group">
-            <label for="username">
-                System Username
-                <span class="help-icon">?
+    <!-- Automated Setup Content -->
+    <div id="automated-setup" class="setup-content active">
+        <div class="form-section">
+            <h2>System Information</h2>
+
+            <div class="form-group">
+                <label for="os-auto">
+                    Operating System
+                    <span class="help-icon">?
+                        <span class="tooltip">
+                            <div class="tooltip-title">Operating System</div>
+                            Select your OS to get the appropriate installation command.
+                        </span>
+                    </span>
+                </label>
+                <select id="os-auto" required>
+                    <option value="">Select your OS</option>
+                    <option value="windows">Windows</option>
+                    <option value="macos">macOS</option>
+                    <option value="linux">Linux</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Git Accounts</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Add each GitHub/GitLab account you want to manage. The pattern will be used to match remote URLs.
+            </p>
+
+            <div class="accounts-container" id="accountsContainerAuto">
+                <div class="account-item" data-index="0">
+                    <div class="form-group">
+                        <label>
+                            Account Pattern
+                            <span class="help-icon">?
+                                <span class="tooltip">
+                                    <div class="tooltip-title">Account Pattern</div>
+                                    A unique identifier used in your remote URLs to distinguish this account. This becomes the SSH host alias.
+                                    <div class="tooltip-example">Examples: github-personal, github-work, gitlab-company</div>
+                                </span>
+                            </span>
+                        </label>
+                        <label>
+                            <input type="text" class="account-pattern" placeholder="e.g., github-personal" required>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Git Name
+                            <span class="help-icon">?
+                                <span class="tooltip">
+                                    <div class="tooltip-title">Git Name</div>
+                                    Your full name as it will appear in commit messages for this account.
+                                    <div class="tooltip-example">Example: John Doe, Jane Smith</div>
+                                </span>
+                            </span>
+                        </label>
+                        <label>
+                            <input type="text" class="account-name" placeholder="e.g., John Doe" required>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Git Email
+                            <span class="help-icon">?
+                                <span class="tooltip">
+                                    <div class="tooltip-title">Git Email</div>
+                                    The email address associated with commits for this account. Should match your GitHub/GitLab account email.
+                                    <div class="tooltip-example">Example: john@example.com</div>
+                                </span>
+                            </span>
+                        </label>
+                        <label>
+                            <input type="email" class="account-email" placeholder="e.g., john@example.com" required>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary btn-add" onclick="addAccount('auto')">+ Add Another Account</button>
+        </div>
+
+        <button class="btn btn-primary generate-btn" onclick="generateAutomatedSetup()">Generate Installation Command</button>
+    </div>
+
+    <!-- Manual Setup Content -->
+    <div id="manual-setup" class="setup-content">
+        <div class="form-section">
+            <h2>System Information</h2>
+
+            <div class="form-group">
+                <label for="username">
+                    System Username
+                    <span class="help-icon">?
                         <span class="tooltip">
                             <div class="tooltip-title">System Username</div>
                             This is your computer's username, used to build file paths for the setup.
@@ -600,158 +773,181 @@
                             <div class="tooltip-example">Example: johndoe</div>
                         </span>
                     </span>
-            </label>
-            <input type="text" id="username" placeholder="e.g., JohnDoe" required>
-        </div>
+                </label>
+                <input type="text" id="username" placeholder="e.g., JohnDoe" required>
+            </div>
 
-        <div class="form-group">
-            <label for="os">
-                Operating System
-                <span class="help-icon">?
+            <div class="form-group">
+                <label for="os">
+                    Operating System
+                    <span class="help-icon">?
                         <span class="tooltip">
                             <div class="tooltip-title">Operating System</div>
                             Select your OS to get commands and file paths specific to your system.
                         </span>
                     </span>
-            </label>
-            <select id="os" required>
-                <option value="">Select your OS</option>
-                <option value="windows">Windows</option>
-                <option value="macos">macOS</option>
-                <option value="linux">Linux</option>
-            </select>
+                </label>
+                <select id="os" required>
+                    <option value="">Select your OS</option>
+                    <option value="windows">Windows</option>
+                    <option value="macos">macOS</option>
+                    <option value="linux">Linux</option>
+                </select>
+            </div>
         </div>
-    </div>
 
-    <div class="form-section">
-        <h2>Git Accounts</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-            Add each GitHub/GitLab account you want to manage. The pattern will be used to match remote URLs.
-        </p>
+        <div class="form-section">
+            <h2>Git Accounts</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Add each GitHub/GitLab account you want to manage. The pattern will be used to match remote URLs.
+            </p>
 
-        <div class="accounts-container" id="accountsContainer">
-            <div class="account-item" data-index="0">
-                <div class="form-group">
-                    <label>
-                        Account Pattern
-                        <span class="help-icon">?
+            <div class="accounts-container" id="accountsContainer">
+                <div class="account-item" data-index="0">
+                    <div class="form-group">
+                        <label>
+                            Account Pattern
+                            <span class="help-icon">?
                                 <span class="tooltip">
                                     <div class="tooltip-title">Account Pattern</div>
                                     A unique identifier used in your remote URLs to distinguish this account. This becomes the SSH host alias.
                                     <div class="tooltip-example">Examples: github-personal, github-work, gitlab-company</div>
                                 </span>
                             </span>
-                    </label>
-                    <label>
-                        <input type="text" class="account-pattern" placeholder="e.g., github-personal" required>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Git Name
-                        <span class="help-icon">?
+                        </label>
+                        <label>
+                            <input type="text" class="account-pattern" placeholder="e.g., github-personal" required>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Git Name
+                            <span class="help-icon">?
                                 <span class="tooltip">
                                     <div class="tooltip-title">Git Name</div>
                                     Your full name as it will appear in commit messages for this account.
                                     <div class="tooltip-example">Example: John Doe, Jane Smith</div>
                                 </span>
                             </span>
-                    </label>
-                    <label>
-                        <input type="text" class="account-name" placeholder="e.g., John Doe" required>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Git Email
-                        <span class="help-icon">?
+                        </label>
+                        <label>
+                            <input type="text" class="account-name" placeholder="e.g., John Doe" required>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Git Email
+                            <span class="help-icon">?
                                 <span class="tooltip">
                                     <div class="tooltip-title">Git Email</div>
                                     The email address associated with commits for this account. Should match your GitHub/GitLab account email.
                                     <div class="tooltip-example">Example: john@example.com</div>
                                 </span>
                             </span>
-                    </label>
-                    <label>
-                        <input type="email" class="account-email" placeholder="e.g., john@example.com" required>
-                    </label>
+                        </label>
+                        <label>
+                            <input type="email" class="account-email" placeholder="e.g., john@example.com" required>
+                        </label>
+                    </div>
                 </div>
             </div>
+
+            <button class="btn btn-secondary btn-add" onclick="addAccount('manual')">+ Add Another Account</button>
         </div>
 
-        <button class="btn btn-secondary btn-add" onclick="addAccount()">+ Add Another Account</button>
+        <button class="btn btn-primary generate-btn" onclick="generateGuide()">Create Setup Guide</button>
     </div>
-
-    <button class="btn btn-primary generate-btn" onclick="generateGuide()">Create Setup Guide</button>
 
     <div id="output"></div>
 </div>
 
 <script>
-    let accountIndex = 1;
+    let accountIndexAuto = 1;
+    let accountIndexManual = 1;
 
-    function addAccount() {
-        const container = document.getElementById('accountsContainer');
-        const newAccount = document.createElement('div');
-        newAccount.className = 'account-item';
-        // noinspection JSCheckFunctionSignatures
-        newAccount.setAttribute('data-index', accountIndex);
-        newAccount.innerHTML = `
-                <div class="form-group">
-                    <label>
-                        Account Pattern
-                        <span class="help-icon">?
-                            <span class="tooltip">
-                                <div class="tooltip-title">Account Pattern</div>
-                                A unique identifier used in your remote URLs to distinguish this account. This becomes the SSH host alias.
-                                <div class="tooltip-example">Examples: github-personal, github-work, gitlab-company</div>
-                            </span>
-                        </span>
-                    </label>
-                    <input type="text" class="account-pattern" placeholder="e.g., github-work" required>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Git Name
-                        <span class="help-icon">?
-                            <span class="tooltip">
-                                <div class="tooltip-title">Git Name</div>
-                                Your full name as it will appear in commit messages for this account.
-                                <div class="tooltip-example">Example: John Doe, Jane Smith</div>
-                            </span>
-                        </span>
-                    </label>
-                    <input type="text" class="account-name" placeholder="e.g., Work Name" required>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Git Email
-                        <span class="help-icon">?
-                            <span class="tooltip">
-                                <div class="tooltip-title">Git Email</div>
-                                The email address associated with commits for this account. Should match your GitHub/GitLab account email.
-                                <div class="tooltip-example">Example: john@example.com</div>
-                            </span>
-                        </span>
-                    </label>
-                    <input type="email" class="account-email" placeholder="e.g., work@company.com" required>
-                </div>
-                <button class="btn btn-danger" onclick="removeAccount(${accountIndex})">Remove</button>
-            `;
-        container.appendChild(newAccount);
-        accountIndex++;
+    function switchMethod(method) {
+        // Update active state on method selectors
+        document.querySelectorAll('.method-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        event.target.closest('.method-option').classList.add('active');
+
+        // Show/hide appropriate content
+        document.querySelectorAll('.setup-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${method}-setup`).classList.add('active');
+
+        // Clear output when switching methods
+        document.getElementById('output').classList.remove('visible');
+        document.getElementById('output').innerHTML = '';
     }
 
-    function removeAccount(index) {
-        const account = document.querySelector(`[data-index="${index}"]`);
+    function addAccount(type) {
+        const containerId = type === 'auto' ? 'accountsContainerAuto' : 'accountsContainer';
+        const container = document.getElementById(containerId);
+        const index = type === 'auto' ? accountIndexAuto++ : accountIndexManual++;
+
+        const newAccount = document.createElement('div');
+        newAccount.className = 'account-item';
+        newAccount.setAttribute('data-index', index);
+        newAccount.innerHTML = `
+            <div class="form-group">
+                <label>
+                    Account Pattern
+                    <span class="help-icon">?
+                        <span class="tooltip">
+                            <div class="tooltip-title">Account Pattern</div>
+                            A unique identifier used in your remote URLs to distinguish this account. This becomes the SSH host alias.
+                            <div class="tooltip-example">Examples: github-personal, github-work, gitlab-company</div>
+                        </span>
+                    </span>
+                </label>
+                <input type="text" class="account-pattern" placeholder="e.g., github-work" required>
+            </div>
+            <div class="form-group">
+                <label>
+                    Git Name
+                    <span class="help-icon">?
+                        <span class="tooltip">
+                            <div class="tooltip-title">Git Name</div>
+                            Your full name as it will appear in commit messages for this account.
+                            <div class="tooltip-example">Example: John Doe, Jane Smith</div>
+                        </span>
+                    </span>
+                </label>
+                <input type="text" class="account-name" placeholder="e.g., Work Name" required>
+            </div>
+            <div class="form-group">
+                <label>
+                    Git Email
+                    <span class="help-icon">?
+                        <span class="tooltip">
+                            <div class="tooltip-title">Git Email</div>
+                            The email address associated with commits for this account. Should match your GitHub/GitLab account email.
+                            <div class="tooltip-example">Example: john@example.com</div>
+                        </span>
+                    </span>
+                </label>
+                <input type="email" class="account-email" placeholder="e.g., work@company.com" required>
+            </div>
+            <button class="btn btn-danger" onclick="removeAccount(${index}, '${containerId}')">Remove</button>
+        `;
+        container.appendChild(newAccount);
+    }
+
+    function removeAccount(index, containerId) {
+        const container = document.getElementById(containerId);
+        const account = container.querySelector(`[data-index="${index}"]`);
         if (account) {
             account.remove();
         }
     }
 
-    function getAccounts() {
+    function getAccounts(type) {
+        const containerId = type === 'auto' ? 'accountsContainerAuto' : 'accountsContainer';
         const accounts = [];
-        document.querySelectorAll('.account-item').forEach(item => {
+        document.querySelectorAll(`#${containerId} .account-item`).forEach(item => {
             const pattern = item.querySelector('.account-pattern').value;
             const name = item.querySelector('.account-name').value;
             const email = item.querySelector('.account-email').value;
@@ -760,6 +956,122 @@
             }
         });
         return accounts;
+    }
+
+    function generateAutomatedSetup() {
+        const os = document.getElementById('os-auto').value;
+        const accounts = getAccounts('auto');
+
+        if (!os || accounts.length === 0) {
+            alert('Please fill in all required fields and add at least one account.');
+            return;
+        }
+
+        // Build the account arguments
+
+        let command = '';
+        let commandForCopy = '';
+        let instructions = '';
+
+        if (os === 'windows') {
+            const accountArgs = accounts.map(acc => `'${acc.pattern}:${acc.name}:${acc.email}'`).join(', ');
+            commandForCopy = `$script = irm https://raw.githubusercontent.com/CallamJ/ssh-git-quick-setup/feature/install-script/install.ps1; Invoke-Expression "& { $script } -Accounts ${accountArgs}"`;
+            command = commandForCopy.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const escapedCommand = commandForCopy.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            instructions = `
+                <div class="guide-section">
+                    <h2><span class="step-number">1</span> Run the Installation Command</h2>
+                    <p>Open <strong>PowerShell as Administrator</strong> and run the following command:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">PowerShell (Run as Administrator)</span>
+                            <button class="copy-btn" data-code="${escapedCommand}" onclick="copyCodeDirect(this)">Copy</button>
+                        </div>
+                        <pre>${command}</pre>
+                    </div>
+
+                    <div class="warning">
+                        <div class="warning-title">Important:</div>
+                        <p>You must run PowerShell as Administrator for the installation script to work properly.</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            const accountArgs = accounts.map(acc => `"${acc.pattern}:${acc.name}:${acc.email}"`).join(' ');
+            commandForCopy = `curl -fsSL https://raw.githubusercontent.com/CallamJ/ssh-git-quick-setup/feature/install-script/install.sh | bash -s -- ${accountArgs}`;
+            command = commandForCopy.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const escapedCommand = commandForCopy.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            instructions = `
+                <div class="guide-section">
+                    <h2><span class="step-number">1</span> Run the Installation Command</h2>
+                    <p>Open your terminal and run the following command:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Terminal</span>
+                            <button class="copy-btn" data-code="${escapedCommand}" onclick="copyCodeDirect(this)">Copy</button>
+                        </div>
+                        <pre>${command}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        const guide = `
+            ${instructions}
+
+            <div class="guide-section">
+                <h2><span class="step-number">2</span> Follow the Script Prompts</h2>
+                <p>The installation script will automatically handle everything for you:</p>
+                <ul>
+                    <li>Create the global Git hooks directory</li>
+                    <li>Generate pre-push, pre-commit, and post-checkout hooks</li>
+                    <li>Configure Git to use the global hooks</li>
+                    <li>Generate SSH keys for each account</li>
+                    <li>Configure your SSH config file</li>
+                    <li>Add the <code>git set-identity</code> alias for manual setup</li>
+                    <li>Guide you through adding SSH keys to GitHub/GitLab</li>
+                    <li>Test your SSH connections</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <h2><span class="step-number">3</span> Using Your Setup</h2>
+                <p>Once the installation is complete, you can start using your multi-account setup. When cloning or working with repositories, use the appropriate host alias:</p>
+
+                ${accounts.map(account => `
+                    <h3>${account.pattern}</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label">Clone example</span>
+                            <button class="copy-btn" onclick='copyCode(this, \`git clone git@${account.pattern}:username/repo.git\`)'>Copy</button>
+                        </div>
+                        <pre>git clone git@${account.pattern}:username/repo.git</pre>
+                    </div>
+                `).join('')}
+
+                <h3>For Existing Repositories</h3>
+                <p>Update the remote URL to use your host alias:</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-label">Update remote URL</span>
+                        <button class="copy-btn" onclick='copyCode(this, \`git remote set-url origin git@PATTERN:username/repo.git\`)'>Copy</button>
+                    </div>
+                    <pre>git remote set-url origin git@PATTERN:username/repo.git</pre>
+                </div>
+                <p style="margin-top: 1rem;">Replace <span class="highlight">PATTERN</span> with your account pattern (e.g., ${accounts[0].pattern})</p>
+
+                <div class="success">
+                    <div class="success-title">🎉 All Done!</div>
+                    <p>Your Git hooks will automatically manage your identity for each repository based on the remote URL pattern.</p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('output').innerHTML = guide;
+        document.getElementById('output').classList.add('visible');
+        document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
     }
 
     function getHomePath(os, username) {
@@ -788,6 +1100,41 @@
         });
     }
 
+    function copyCodeDirect(button) {
+        const code = button.getAttribute('data-code');
+        // Decode any HTML entities and handle the text directly
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            document.execCommand('copy');
+            const originalText = button.textContent;
+            button.textContent = '✓ Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+
     function switchTab(tabId, tabGroupId) {
         // Hide all tab contents in this group
         const group = document.getElementById(tabGroupId);
@@ -800,7 +1147,6 @@
 
         // Show selected tab content
         document.getElementById(tabId).classList.add('active');
-        // noinspection JSDeprecatedSymbols
         event.target.classList.add('active');
     }
 
@@ -907,7 +1253,7 @@ Host ${account.pattern}
     function generateGuide() {
         const username = document.getElementById('username').value;
         const os = document.getElementById('os').value;
-        const accounts = getAccounts();
+        const accounts = getAccounts('manual');
 
         if (!username || !os || accounts.length === 0) {
             alert('Please fill in all required fields and add at least one account.');
@@ -924,7 +1270,6 @@ Host ${account.pattern}
         const postCheckoutHook = generatePostCheckoutHook(accounts);
         const sshConfig = generateSSHConfig(accounts, os);
 
-        // noinspection UnnecessaryLocalVariableJS
         const guide = `
                 <div class="guide-section">
                     <h2><span class="step-number">1</span> Create Global Git Hooks Directory</h2>
