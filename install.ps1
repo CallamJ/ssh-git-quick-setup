@@ -262,7 +262,6 @@ Host $pattern
 function Display-PublicKeys {
     Print-Header "Step 9: Public SSH Keys"
     Print-Info "Copy these keys to your GitHub/GitLab account settings"
-    Print-Info "GitHub Settings -> SSH and GPG keys -> New SSH key"
     Write-Host ""
 
     foreach ($account in $Accounts) {
@@ -282,9 +281,22 @@ function Display-PublicKeys {
         }
     }
 
-    $response = Read-Host "Once you are ready type 'yes' to automatically test your ssh connections or type skip to skip the tests (y/skip)"
+    Write-Host "Instructions:" -ForegroundColor Cyan
+    Write-Host "  1. Copy one of the public keys above"
+    Write-Host "  2. Go to GitHub/GitLab Settings for the corresponding account > SSH and GPG keys"
+    Write-Host "  3. Click 'New SSH key' and paste the key"
+    Write-Host "  4. Give it a descriptive title (e.g., 'Work Laptop')"
+    Write-Host "  5. Repeat for each key"
+    Write-Host ""
 
-        if ($response -ne 'y' -and $response -ne 'Y') {
+    do {
+        $response = Read-Host "Once you are ready type 'y' to automatically test your ssh connections or type 'skip' to skip the tests (y/skip)"
+        $response = $response.Trim().ToLower()
+
+        if ($response -eq 'y' -or $response -eq 'yes') {
+            Test-SshConnections
+            return
+        } elseif ($response -eq 'skip') {
             Print-Warning "Skipping SSH connection tests"
             Write-Host "You can test the connections later by running:" -ForegroundColor Cyan
             foreach ($account in $Accounts) {
@@ -295,8 +307,9 @@ function Display-PublicKeys {
             Write-Host ""
             return
         } else {
-            Test-SshConnections
+            Write-Host "Invalid input. Please type 'y' or 'skip'" -ForegroundColor Yellow
         }
+    } while ($true)
 }
 
 
